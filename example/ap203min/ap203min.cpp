@@ -482,7 +482,11 @@ SdaiSecurity_classification * Classification( Registry * registry, InstMgr * ins
     return clas;
 }
 
-int main( void ) {
+
+
+
+void writingFile() {
+    printf("Start writing\n");
     // The registry contains information about types present in the current schema; SchemaInit is a function in the schema-specific SDAI library
     Registry * registry = new Registry( SchemaInit );
 
@@ -594,14 +598,15 @@ int main( void ) {
     SdaiShape_representation * shape_rep = ( SdaiShape_representation * ) registry->ObjCreate( "SHAPE_REPRESENTATION" );
     instance_list->Append( ( SDAI_Application_instance * ) shape_rep, completeSE );
     shape_rep->name_( "''" ); // Document?
+    // Füge der Shape_Representation die Axis2_Placement_3D hinzu
     shape_rep->items_()->AddNode( new EntityNode( ( SDAI_Application_instance * ) orig_transform ) );
+    // Füge der Shape_Representation den Context hinzu
     shape_rep->context_of_items_( ( SdaiRepresentation_context * ) context );
 
     SdaiShape_definition_representation * shape_def_rep = ( SdaiShape_definition_representation * ) registry->ObjCreate( "SHAPE_DEFINITION_REPRESENTATION" );
     instance_list->Append( ( SDAI_Application_instance * ) shape_def_rep, completeSE );
     shape_def_rep->definition_( pshape );
     shape_def_rep->used_representation_( shape_rep );
-
 
     // Stand-in person and org.
     SdaiPerson * person = ( SdaiPerson * ) registry->ObjCreate( "PERSON" );
@@ -703,6 +708,25 @@ int main( void ) {
     ownerpersonorg->items_()->AddNode( new EntityNode( ( SDAI_Application_instance * ) prod ) );
     ownerpersonorg->role_( owner_role );
 
+    // ToDo
+    // Versuch, einen Punkt einzufügen
+    // pwd      /Users/silas/CLionProjects/stepcode/example/ap203min/build/bin
+    // cd ..; make -j4; cd bin; ./AP203Minimum
+
+    SdaiGeometrically_bounded_wireframe_shape_representation * bounded_wireframe_shape_repr = ( SdaiGeometrically_bounded_wireframe_shape_representation * ) registry->ObjCreate("BOUNDED_WIREFRAME_SHAPE_REPRESENTATION");
+    //instance_list->Append( ( SDAI_Application_instance * ) bounded_wireframe_shape_repr, completeSE);
+    //bounded_wireframe_shape_repr->name_("'wireframe_rep_0'");
+
+
+    SdaiGeometric_curve_set * curve_set = ( SdaiGeometric_curve_set * ) registry->ObjCreate("GEOMETRIC_CURVE_SET");
+    instance_list->Append( (SDAI_Application_instance * ) curve_set, completeSE);
+    curve_set->name_("'curve_set_0'");
+
+    SdaiCartesian_point * testPoint = MakePoint(registry, instance_list, 2.0, 3.0, 5.0);
+    instance_list->Append( (SDAI_Application_instance * ) testPoint, completeSE);
+
+    // End ToDo
+
 
     sfile->WriteExchangeFile( "outfile.stp" );
     if( sfile->Error().severity() < SEVERITY_USERMSG ) {
@@ -714,6 +738,61 @@ int main( void ) {
     delete registry;
     delete instance_list;
     delete sfile;
+    printf( "Writing Done!\n" );
+}
 
-    printf( "Done!\n" );
+
+
+/*ToDo
+ * ToDo
+ * ToDo
+ */
+void readingFiles() {
+    printf("Start Reading\n");
+
+    Registry * registry = new Registry( SchemaInit );
+    // The InstMgr holds instances that have been created or that have been loaded from a file
+    InstMgr * instance_list = new InstMgr();
+    // Increment FileId so entities start at #1 instead of #0.
+    instance_list->NextFileId();
+
+    // STEPfile takes care of reading and writing Part 21 files
+    STEPfile * sfile = new STEPfile( *registry, *instance_list, "", false );
+
+    sfile->ReadExchangeFile("OnePoint.stp", true);
+    InstMgr * header_instance = sfile->HeaderInstances();
+
+    for (int i = 0; i < 3; i += 1) {
+        MgrNode * my_mgr_node = header_instance->GetMgrNode(i);
+        printf("\nSee what will happen--- EntityName\n");
+        SDAI_Application_instance * my_entity = my_mgr_node->GetSTEPentity();
+        printf(my_entity->EntityName());
+
+    }
+
+    for (int i = 0; i < instance_list->InstanceCount(); i += 1) {
+        MgrNode * my_mgr_node = instance_list->GetMgrNode(i);
+        printf("\n----See what will happen---\n");
+        SDAI_Application_instance * my_entity = my_mgr_node->GetApplication_instance();
+        const char * my_name = my_entity->EntityName();
+
+        printf(my_name);
+        printf("\n");
+
+        if (std::string(my_name) == "Cartesian_Point") {
+            printf("Yes");
+            SdaiCartesian_point * my_point = ( SdaiCartesian_point * ) my_entity;
+            RealAggregate * coords = my_point->coordinates_();
+
+        }
+
+    }
+    printf("\nDone reading\n");
+}
+
+
+int main( void ) {
+    //writingFile();
+    // ToDo
+    readingFiles();
 }
